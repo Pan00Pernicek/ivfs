@@ -1,0 +1,85 @@
+#!/bin/sh
+###timers
+onfcreate(){
+	if [ -f $2 ]; then
+		echo already exists, ignoring
+		exit
+	fi
+	while true
+	do
+		if [ -f $2 ]; then
+			shift
+			shift
+			$@
+			break
+		fi
+		sleep $1
+	done
+}
+onfchange(){
+	filetmp=$(cat $2)
+	while true
+	do
+		if [ ! $filetmp = $(cat $2) ]; then
+			shift
+			shift
+			$@
+			break
+		fi
+		filetmp=$(cat $2)
+		sleep $1
+	done
+}
+onfdel(){
+	if [ ! -f $2 ]; then
+		echo already doesnt exists, ignoring
+		exit
+	fi
+	while true
+	do
+		if [ ! -f $2 ]; then
+			shift
+			shift
+			$@
+			break
+		fi
+		sleep $1
+	done
+}
+###runtime
+extmp(){
+	exec=$1
+	shift
+	for arg in "$@"
+	do
+		n=0
+		for argv in $arg
+		do
+			n=$(( n + 1 ))
+			if [ $n = 1 ]
+			then
+				source=$argv
+			else
+				files="$files $argv"
+				ln $source $argv
+			fi
+		done
+	done
+	$exec
+	rm -r $files
+}
+input() {
+	cd $1
+	input=$1
+}
+use() {
+	echo task log:
+	echo "--> "For input "[$input] use:"
+	echo "-->	"Sorting to $path:
+	echo "-->		"Using: $@ 
+	for item in $@
+	do
+		mv "$item" "$path"
+	done
+}
+###
